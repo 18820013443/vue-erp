@@ -1,0 +1,75 @@
+// .operation-small-button.el-button{
+//     padding: 5px 7px;
+//     margin: 0px;
+//     margin-top: 2px;
+//     margin-bottom: 2px;
+//   }
+
+.full-width{
+    width: 100% !important;
+}
+
+.font-bold{
+    font-weight: bold;
+}
+.issue-switch{
+    // min-height: calc(100vh - 84px);
+    // display: flex;
+    // height: 100%;
+    // align-items:center;/*侧轴上居中*/
+    // justify-content:center;/*主轴上居中*/
+    // vertical-align: middle;
+    margin-right: 23%;
+    transform:translateY(50%);
+    min-width: 155px;
+}
+.app-container-filter-button {
+    padding-bottom: 20px;
+}
+
+.postForm-el-switch{
+    float: left;
+    transform:translateY(50%);
+}
+
+.postForm-el-divider-header {
+    margin-top: 3px;
+}
+
+.postForm-el-divider-middle {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.postForm-el-divider-footer {
+    margin-top: 8px;
+}
+
+.el-divider {
+    background-color: #ebeef5;
+}
+
+.el-dialog__body {
+    padding-top: 0px;
+    padding-bottom: 5px;
+    // height: 18px;
+}
+.el-dialog__header {
+    padding-bottom: 0px;
+}
+.el-dialog {
+    position: absolute;
+    top: 45%;
+    left:50%;
+    margin: 0!important;
+    transform: translate(-50%,-50%);
+    max-height: calc(100%-50px);
+    max-width: calc(100%-50px);
+    display: flex;
+    flex-direction: column;
+    > .el-dialog__body {
+        overflow: auto;
+        color: #666666;
+      }
+}
+
