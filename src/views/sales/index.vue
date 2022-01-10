@@ -461,7 +461,6 @@ export default {
         this.list.forEach(item => {
           if (row.order === item.order) {
             this.cellClickIndex = row.order
-          // console.log(this.cellClickIndex)
           }
         })
       } else {
