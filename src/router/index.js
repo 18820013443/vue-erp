@@ -56,6 +56,22 @@ export const constantRoutes = [
   },
 
   {
+    path: '/customer',
+    component: Layout,
+    redirect: '/sales/customers',
+    name: 'customers',
+    meta: { title: '客户管理', icon: 'el-icon-s-help' },
+    children: [
+      {
+        path: 'customers',
+        name: 'Customers',
+        component: () => import('@/views/customers/index'),
+        meta: { title: '客户列表', icon: 'table' }
+      }
+    ]
+  },
+
+  {
     path: '/sales',
     component: Layout,
     alwaysShow: true,
@@ -68,6 +84,35 @@ export const constantRoutes = [
         name: 'Orders',
         component: () => import('@/views/sales/index'),
         meta: { title: '订单管理', icon: 'table' }
+      },
+      {
+        path: 'issued',
+        name: 'Issued',
+        component: () => import('@/views/sales/issued/index'),
+        meta: { title: '发货管理', icon: 'table' }
+      }
+    ]
+  },
+
+  {
+    path: '/warehouse',
+    component: Layout,
+    alwaysShow: true,
+    redirect: '/warehouse/income',
+    name: 'warehouse',
+    meta: { title: '库存管理', icon: 'el-icon-s-help' },
+    children: [
+      {
+        path: 'income',
+        name: 'Income',
+        component: () => import('@/views/warehouse/income/index'),
+        meta: { title: '入库管理', icon: 'table' }
+      },
+      {
+        path: 'inventory',
+        name: 'Inventory',
+        component: () => import('@/views/warehouse/inventory/index'),
+        meta: { title: '库存列表', icon: 'table' }
       }
     ]
   },

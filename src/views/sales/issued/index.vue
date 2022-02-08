@@ -48,29 +48,13 @@
     <el-dialog :title="formTitle" :visible.sync="dialogAddUpdateOrderVisible">
       <el-divider class="postForm-el-divider-header" />
       <div slot="footer" class="dialog-footer">
-        <orderAddUpdate ref="orderRef" :order-form="currentEditOrder" :is-edit-or-delete="clickNewEditOrDelete" />
+        <OrderIssuedAddUpdate ref="orderRef" :order-issued-form="currentEditOrder" :is-edit-or-delete="clickNewEditOrDelete" />
         <el-button @click="cancelForm">取 消</el-button>
         <el-button type="primary" @click="saveForm">确 定</el-button>
       </div>
     </el-dialog>
 
-    <!-- 订单发货dialog或者是编辑发货订单 -->
-    <!-- <el-dialog :title="formTitle" :visible.sync="dialogAddUpdateOrderVisible" @close="resetForm"> -->
-    <el-dialog :title="formTitle" :visible.sync="dialogIssuedAddUpdateOrderVisible">
-      <el-divider class="postForm-el-divider-header" />
-      <div slot="footer" class="dialog-footer">
-        <OrderIssuedAddUpdate ref="orderIssuedRef" :order-issued-form="currentEditIssuedOrder" />
-        <el-button @click="cancelIssuedForm">取 消</el-button>
-        <el-button type="primary" @click="saveIssuedForm">确 定</el-button>
-      </div>
-    </el-dialog>
-
     <!-- <h3> {{ dicSpan }} </h3> -->
-    <!-- :row-class-name="rowClassName" // 动态给行添加样式
-    @cell-mouse-enter="handleMouseEnter" // 单元格移入事件
-    :row-class-name="rowClassName"
-    @cell-mouse-leave="handleMouseLeave" // 单元格移出事件 -->
-    <!-- highlight-current-row -->
     <el-table
       ref="tTable"
       :key="tableKey"
@@ -141,15 +125,15 @@
       />
       <el-table-column
         align="center"
-        prop="price"
-        label="单价"
+        prop="issued_num"
+        label="发货数量"
         :width="90"
       />
       <el-table-column
         align="center"
-        prop="total_price"
-        label="总价"
-        :width="minColumnWidth"
+        prop="pending_num"
+        label="欠货数量"
+        :width="90"
       />
       <el-table-column align="center" label="已发货">
         <template slot-scope="scope">
@@ -161,15 +145,19 @@
           />
         </template>
       </el-table-column>
+      <el-table-column align="center" label="部分发货">
+        <template slot-scope="scope">
+          <el-switch
+            v-model="scope.row.issued_partial"
+            disabled
+            active-color="#13ce66"
+            inactive-color="#ff4949"
+          />
+        </template>
+      </el-table-column>
       <el-table-column align="center" label="操作" width="280">
         <template slot-scope="scope">
           <el-row :gutter="10">
-            <el-button
-              class="el-button el-button--primary el-button--mini is-plain operation-small-button"
-              type="primary"
-              @click="editOrder(scope.row)"
-            ><i class="el-icon-edit" />编辑
-            </el-button>
             <el-button
               class="el-button el-button--info el-button--mini is-plain operation-small-button"
               type="success"
@@ -187,21 +175,19 @@
       </el-table-column>
     </el-table>
 
-    <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.size" @pagination="getList" />
+    <pagination v-show="total>0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="getList" />
 
   </div>
 </template>
 
 <script>
-import { fetchList } from '@/api/erp/sales'
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
-import OrderAddUpdate from './orders/addupdate'
-import OrderIssuedAddUpdate from './issued/addupdate'
-import { fetchOrder, reviseOrder, createOrder, deleteOrder, fetchIssuedOrder, reviseIssuedOrder } from '@/api/erp/sales'
+import OrderIssuedAddUpdate from './addupdate'
+import { fetchData, deleteIssuedOrder, fetchIssuedOrder, reviseIssuedOrder } from '@/api/erp/sales'
 import { Message } from 'element-ui'
 
 export default {
-  components: { Pagination, OrderAddUpdate, OrderIssuedAddUpdate },
+  components: { Pagination, OrderIssuedAddUpdate },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -220,7 +206,7 @@ export default {
       listLoading: true,
       listQuery: {
         page: 1,
-        size: 10,
+        limit: 10,
         date: undefined,
         customer: undefined,
         issued_all: undefined
@@ -249,9 +235,7 @@ export default {
       },
       clickNewEditOrDelete: '',
       cellIndex: -1,
-      cellClickIndex: -1,
-      dialogIssuedAddUpdateOrderVisible: false,
-      currentEditIssuedOrder: {}
+      cellClickIndex: -1
     }
   },
   watch: {
@@ -272,6 +256,12 @@ export default {
           this.addClassName(newValue, 'current-row')
         }
       }
+    },
+    page: {
+      handler(newvalue, oldvalue) {
+        this.cellClickIndex = -1
+        this.removeClassName('current-row')
+      }
     }
   },
   created() {
@@ -280,7 +270,7 @@ export default {
   methods: {
     getList() {
       this.listLoading = true
-      fetchList(this.listQuery).then(response => {
+      fetchData(this.listQuery).then(response => {
         var results = response.results
         this.list = this.expandResultsList(results)
         this.getSpanDic()
@@ -292,11 +282,6 @@ export default {
     expandResultsList(results) {
       const resList = []
       for (var index = 0; index < results.length; index++) {
-        let total_price = 0
-        const orderDetails = results[index]['order_detail']
-        orderDetails.forEach(val => {
-          total_price += val['total_price']
-        })
         for (var i = 0; i < results[index].order_detail.length; i++) {
           var objRes = {}
           objRes.id = results[index].id
@@ -309,9 +294,8 @@ export default {
           objRes.clothe_num = results[index].order_detail[i].clothe_num
           objRes.color = results[index].order_detail[i].color
           objRes.amount = results[index].order_detail[i].amount
-          objRes.price = results[index].order_detail[i].price
-          // objRes.total_price = results[index].order_detail[i].total_price
-          objRes.total_price = total_price
+          objRes.issued_num = results[index].order_detail[i].issued_num
+          objRes.pending_num = results[index].order_detail[i].pending_num
           resList.push(objRes)
         }
       }
@@ -365,7 +349,6 @@ export default {
     // 请求数据时候带上filter
     handleFilter() {
       this.listQuery.page = 1
-      this.listQuery.size = 10
       this.getList()
     },
     // 重置filter
@@ -381,75 +364,26 @@ export default {
       this.formTitle = '新建订单'
       this.dialogAddUpdateOrderVisible = true
     },
-    // 点击编辑按钮
-    editOrder(item) {
-      this.clickNewEditOrDelete = 'edit'
-      this.formTitle = '编辑订单'
-      this.currentEditOrder.orderId = item.id
-      this.getSingleOrder(item.id)
-      this.dialogAddUpdateOrderVisible = true
-    },
-    // 根据id获取订单
-    getSingleOrder(id) {
-      if (!id) return
-      fetchOrder(id).then((response) => {
-        this.listLoading = true
-        this.currentEditOrder = Object.assign({}, this.currentEditOrder, response) // 合并对象
-        // console.log(this.currentEditOrder)
-        this.listLoading = false
-      })
-    },
     // 根据id获取Issued订单
     getSingleIssuedOrder(id) {
       if (!id) return
       fetchIssuedOrder(id).then((response) => {
         this.listLoading = true
-        this.currentEditIssuedOrder = Object.assign({}, this.currentEditIssuedOrder, response) // 合并对象
-        console.log(this.currentEditOrder)
+        this.currentEditOrder = Object.assign({}, this.currentEditOrder, response) // 合并对象
         this.listLoading = false
       })
     },
     // 重置表单
     resetForm() {
-      this.$refs.orderRef.$refs.orderForm.resetFields()
+      this.$refs.orderRef.$refs.orderIssuedForm.resetFields()
     },
     // 保存新建订单表单
     saveForm() {
-      // this.$refs.orderRef.dialogFormSave()
-      this.$refs.orderRef.$refs.orderForm.validate(valid => {
-        if (valid) {
-          var order = this.$refs.orderRef.orderForm
-          // order.order_date = new Date()
-          order.order_date = this.FormatDate(order.order_date)
-          // order.order_date = order.order_date.getFullYear() + '-' + order.order_date.getMonth() + '-' + order.order_date.getDate()
-          console.log(order.order_date)
-          var savePromise = this.clickNewEditOrDelete === 'edit' ? reviseOrder(order.id, order) : createOrder(order)
-          savePromise.then(
-            (res) => {
-              this.dialogAddUpdateOrderVisible = false
-              this.getList()
-              this.resetForm()
-            },
-            (response) => {
-              Message({
-                // message: this.clickNewEditOrDelete === 'edit' ? '创建订单失败!' : '修改订单失败!',
-                message: response.message,
-                type: 'error'
-                // duration: 5 * 1000
-              })
-            }
-          )
-        } else {
-          console.log('invalid')
-        }
-      })
-    },
-    saveIssuedForm() {
-      var order = this.$refs.orderIssuedRef.orderIssuedForm
+      var order = this.$refs.orderRef.orderIssuedForm
       var savePromise = reviseIssuedOrder(order.id, order)
       savePromise.then(
         res => {
-          this.dialogIssuedAddUpdateOrderVisible = false
+          this.dialogAddUpdateOrderVisible = false
           this.getList()
           this.resetForm()
           this.$message({
@@ -465,14 +399,6 @@ export default {
         }
       )
     },
-    FormatDate(inputDate) {
-      const y = inputDate.getFullYear()
-      let m = inputDate.getMonth() + 1
-      let d = inputDate.getDate()
-      m = m < 10 ? ('0' + m) : m
-      d = d < 10 ? ('0' + d) : d
-      return y + '-' + m + '-' + d
-    },
     // 取消表单
     cancelForm() {
       this.dialogAddUpdateOrderVisible = false
@@ -487,32 +413,6 @@ export default {
         }
       })
     },
-    // 给对应的rowIndex添加类名
-    // rowClassName({ row, rowIndex }) {
-    //   let r = -1
-    //   // let s = -1
-    //   if (this.eventStatus === 'cellhover') {
-    //     this.list.forEach(item => {
-    //       if (this.cellIndex === row.order) {
-    //         r = rowIndex
-    //       }
-    //     })
-    //     if (rowIndex === r) {
-    //       return 'hover-row'
-    //     }
-    //   }
-    //   if (this.cellClickIndex !== -1) {
-    //     if (row.order === this.cellClickIndex) {
-    //       return 'current-row'
-    //     }
-    //   }
-    //   console.log(this.cellClickIndex)
-    //   if (this.eventStatus === 'cellclick') {
-    //     if (row.order === this.cellClickIndex) {
-    //       return 'current-row'
-    //     }
-    //   }
-    // },
     // 鼠标离开
     handleMouseLeave(row, column, cell, event) {
       this.cellIndex = -1
@@ -555,9 +455,13 @@ export default {
         }
       })
     },
+    // 改变page页删除current-row
+    changecurrentpage() {
+      this.removeClassName('current-row')
+    },
     // 删除订单
     orderDelete(row) {
-      var deleteHandler = (cb) => deleteOrder(row.id).then( // 当箭头函数体只有一个`return`语句时，可以省略`return`关键字和方法体的花括号
+      var deleteHandler = (cb) => deleteIssuedOrder(row.id).then( // 当箭头函数体只有一个`return`语句时，可以省略`return`关键字和方法体的花括号
         (res) => {
           cb()
           this.getList()
@@ -589,28 +493,12 @@ export default {
       })
     },
     issueOrder(item) {
-      this.clickNewEditOrDelete = 'issue'
+      this.clickNewEditOrDelete = 'editor'
       this.formTitle = '编辑发货'
       this.currentEditOrder.orderId = item.id
       this.getSingleIssuedOrder(item.id)
-      this.dialogIssuedAddUpdateOrderVisible = true
-    },
-    cancelIssuedForm() {
-      this.dialogIssuedAddUpdateOrderVisible = false
+      this.dialogAddUpdateOrderVisible = true
     }
-    // 将对象dicSpan转化为list
-    // convertDicSpanToList(dicSpan) {
-    //   for (var key in this.dicSpan) {
-    //     const indexList = []
-    //     indexList.push(parseInt(key))
-    //     if (dicSpan[key] > 1) {
-    //       for (let i = 0; i < dicSpan[key] - 1; i++) {
-    //         indexList.push(parseInt(key) + i + 1)
-    //       }
-    //     }
-    //     this.tableIndex.push(indexList)
-    //   }
-    // }
   }
 }
 </script>

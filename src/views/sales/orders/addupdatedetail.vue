@@ -4,11 +4,11 @@
       <el-form-item label="款号:" prop="clothe_num">
         <el-input v-model="orderDetailForm.clothe_num" placeholder="请输入款号" @change="changedColtheNumOrColor" />
       </el-form-item>
-      <el-form-item label="数量:" prop="amount">
-        <el-input v-model.number="orderDetailForm.amount" oninput="value=value.replace(/[^0-9.]/g,'')" placeholder="请输入数量" />
-      </el-form-item>
       <el-form-item label="颜色:" prop="color">
         <el-input v-model="orderDetailForm.color" placeholder="请输入颜色" @change="changedColtheNumOrColor" />
+      </el-form-item>
+      <el-form-item label="订单数量:" prop="amount">
+        <el-input v-model.number="orderDetailForm.amount" oninput="value=value.replace(/[^0-9.]/g,'')" placeholder="请输入数量" />
       </el-form-item>
       <el-form-item label="单价:" prop="price">
         <el-input v-model="orderDetailForm.price" oninput="value=value.replace(/[^0-9.]/g,'')" placeholder="请输入单价" />

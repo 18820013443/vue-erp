@@ -1,44 +1,45 @@
 <template>
-  <el-form ref="orderForm" :model="orderForm" :rules="orderRules" label-width="85px">
-    <el-form-item v-if="!!orderForm.orderId" label="订单号码:">
-      <el-input v-model="orderForm.order_num" placeholder="请输入订单号码" disabled />
+  <el-form ref="orderIssuedForm" :model="orderIssuedForm" :rules="orderRules" label-width="85px">
+    <el-form-item v-if="!!orderIssuedForm.orderId" label="订单号码:">
+      <el-input v-model="orderIssuedForm.order_num" placeholder="请输入订单号码" disabled />
     </el-form-item>
     <!-- <h3> {{ order }} </h3> -->
     <el-form-item label="订单日期:" :required="true">
       <el-date-picker
-        v-model="orderForm.order_date"
+        v-model="orderIssuedForm.order_date"
         type="date"
         placeholder="订单日期"
         class="full-width"
+        disabled
       />
     </el-form-item>
-    <el-form-item label="已发货:">
+    <!-- <el-form-item label="已发货:">
       <el-switch
-        v-model="orderForm.issued_all"
+        v-model="orderIssuedForm.issued_all"
         class="postForm-el-switch"
         active-color="#13ce66"
         inactive-color="#ff4949"
       />
-    </el-form-item>
+    </el-form-item> -->
     <el-form-item label="客户姓名:" prop="name">
-      <el-input v-model="orderForm.name" placeholder="请输入客户姓名" auto-complete="off" />
+      <el-input v-model="orderIssuedForm.name" placeholder="请输入客户姓名" auto-complete="off" disabled />
     </el-form-item>
     <el-form-item label="客户电话:" prop="phone">
-      <el-input v-model="orderForm.phone" placeholder="请输入客户电话" auto-complete="off" />
+      <el-input v-model="orderIssuedForm.phone" placeholder="请输入客户电话" auto-complete="off" disabled />
     </el-form-item>
     <el-form-item label="客户地址:" prop="address">
-      <el-input v-model="orderForm.address" placeholder="请输入客户地址" auto-complete="off" />
+      <el-input v-model="orderIssuedForm.address" placeholder="请输入客户地址" auto-complete="off" disabled />
     </el-form-item>
 
-    <el-divider class="postForm-el-divider-middle" />
-    <!-- <h3> {{ orderForm }} </h3> -->
-    <el-button type="success" icon="el-icon-plus" class="postForm-create-button" @click="AddOrderItem">新增</el-button>
+    <!-- <el-divider class="postForm-el-divider-middle" /> -->
+    <!-- <h3> {{ orderIssuedForm }} </h3> -->
+    <!-- <el-button type="success" icon="el-icon-plus" class="postForm-create-button" @click="AddOrderItem">新增</el-button> -->
     <!-- <el-button type="success" icon="el-icon-plus" class="postForm-create-button" @click="dialogFormSave">测试</el-button> -->
     <el-divider class="postForm-el-divider-middle" />
 
-    <el-dialog title="订单详情编辑" :visible.sync="dialogAddOrderItemVisible" append-to-body>
+    <el-dialog title="订单发货详情编辑" :visible.sync="dialogAddOrderItemVisible" append-to-body>
       <el-divider class="postForm-el-divider-header" />
-      <OrderUpdateDetail ref="orderDetailRef" :order-detail-form="orderDetailEdit" @changedColtheNumOrColor="reviseClotheOrColor" />
+      <OrderIssuedUpdateDetail ref="orderDetailRef" :order-detail-form="orderDetailEdit" />
       <el-divider class="postForm-el-divider-middle" />
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogDetailFormCancel">取 消</el-button>
@@ -48,7 +49,7 @@
 
     <el-table
       v-loading="listLoading"
-      :data="orderForm.order_detail"
+      :data="orderIssuedForm.order_detail"
       style="width: 100%"
       border
     >
@@ -77,8 +78,8 @@
       />
       <el-table-column
         align="center"
-        prop="price"
-        label="单价"
+        prop="issued_num"
+        label="发货数量"
         width="110px"
       />
       <el-table-column align="center" label="操作">
@@ -107,21 +108,21 @@
 </template>
 
 <script>
-import OrderUpdateDetail from './addupdatedetail'
+import OrderIssuedUpdateDetail from './addupdatedetail'
 import { isValidPhone } from '@/utils/validate'
 
 export default {
-  name: 'OrderAddUpdate',
-  components: { OrderUpdateDetail },
+  name: 'OrderIssuedAddUpdate',
+  components: { OrderIssuedUpdateDetail },
   props: {
-    orderForm: {
+    orderIssuedForm: {
       type: Object,
       required: true
-    },
-    isEditOrDelete: {
-      type: String,
-      required: true
     }
+    // isEditOrDelete: {
+    //   type: String,
+    //   required: true
+    // }
   },
   data() {
     const checkPhone = (rule, value, callback) => {
@@ -153,9 +154,9 @@ export default {
         ]
       },
       orderDetailItem: {},
-      changedColtheNumOrColor: false,
       detailTableId: 0,
-      addOrEditStatus: ''
+      addOrEditStatus: '',
+      initialIssuedNum: 0
       // detailFormTempData: {}
     }
   },
@@ -173,47 +174,13 @@ export default {
       // console.log(this.orderDetailEdit)
       this.dialogAddOrderItemVisible = true
     },
-    // dialogFormSave() {
-    //   this.$refs.orderForm.validate(valid => {
-    //     if (valid) {
-    //       console.log(valid)
-    //       console.log('valid')
-    //     } else {
-    //       console.log('not valid')
-    //     }
-    //   })
-    // },
     // Detail表单保存
     dialogDetailFormSave() {
-      this.$refs.orderDetailRef.$refs.orderDetailForm.validate(valid => {
+      this.$refs.orderDetailRef.$refs.orderIssuedDetailForm.validate(valid => {
+        // console.log(this.$refs.orderDetailRef.$refs)
         if (valid) {
-          // 检查是否有相同的款号和颜色，如果有，则提示warning，没有则将数据添加到表格中
-          if (this.changedColtheNumOrColor) {
-            var isItemExists = this.checkItemExists(this.orderDetailEdit.clothe_num, this.orderDetailEdit.color)
-            // console.log('isItemExists:' + isItemExists)
-            if (isItemExists) {
-              this.$message({
-                message: '订单记录中已经包含了同样的款号和颜色',
-                type: 'warning'
-              })
-              return
-            }
-          }
-          // if (this.orderForm.order_detail.indexOf(this.orderDetailEdit) == -1) {
-          //   this.orderForm.order_detail.push(this.orderDetailEdit)
-          // }
-          console.log(this.orderDetailEdit)
-          if (this.addOrEditStatus === 'add') {
-            if (!this.orderForm.order_detail) this.orderForm.order_detail = []
-            this.orderForm.order_detail.push(this.orderDetailEdit)
-          } else if (this.addOrEditStatus === 'edit') {
-            this.orderForm.order_detail[this.detailTableId].clothe_num = this.orderDetailEdit.clothe_num
-            this.orderForm.order_detail[this.detailTableId].amount = this.orderDetailEdit.amount
-            this.orderForm.order_detail[this.detailTableId].color = this.orderDetailEdit.color
-            this.orderForm.order_detail[this.detailTableId].price = this.orderDetailEdit.price
-          }
+          this.orderIssuedForm.order_detail[this.detailTableId].issued_num = this.$refs.orderDetailRef.orderIssuedDetailForm.issued_num
           this.dialogAddOrderItemVisible = false
-          this.changedColtheNumOrColor = false
         } else {
           console.log('not valid')
         }
@@ -223,14 +190,19 @@ export default {
     dialogDetailFormCancel() {
       // this.orderDetailEdit = JSON.parse(JSON.stringify(this.DetailFormMiddleData))
       this.dialogAddOrderItemVisible = false
+      // this.resetOrderDetailForm()
+      console.log('cancel:' + this.initialIssuedNum)
+      this.$refs.orderDetailRef.$refs.orderIssuedDetailForm.resetFields()
+      this.$refs.orderDetailRef.orderIssuedDetailForm.issued_num = this.initialIssuedNum
     },
     // 重置第一个表单
     resetOrderForm() {
-      this.$refs.orderForm.resetFields()
+      this.$refs.orderIssuedForm.resetFields()
     },
     // 关闭第二个表单时重置field
     resetOrderDetailForm() {
-      this.$refs.orderDetailRef.resetOrderDetailForm()
+      // console.log('kkk' + this.initialIssuedNum)
+      this.$refs.orderDetailRef.orderIssuedDetailForm.issued_num = this.initialIssuedNum
     },
     // 编辑当前OrderDetailItem
     editOrderDetailItem(item, index) {
@@ -238,32 +210,28 @@ export default {
       // this.orderDetailEdit = JSON.parse(JSON.stringify(item)) // 深拷贝scope中的数据
       this.addOrEditStatus = 'edit'
       this.detailTableId = index
-      // console.log(index)
       this.orderDetailEdit = Object.assign(this.orderDetailEdit, item)
+      // console.log('kkk' + this.initialIssuedNum)
+      this.initialIssuedNum = this.orderDetailEdit.issued_num
       this.dialogAddOrderItemVisible = true
     },
     // 删除当前OrderDetailItem
     deleteOrderDetailItem(item) {
-      var array = this.orderForm.order_detail || []
+      var array = this.orderIssuedForm.order_detail || []
       array.splice(array.indexOf(item), 1)
     },
     // 查找款号和颜色是否已经在orderDetail中
     checkItemExists(clothe_num, color) {
       var isItemExists = false
       // 新建订单时，order_detail为空
-      if (!this.orderForm.order_detail) return isItemExists
-      var orderDetail = this.orderForm.order_detail
+      if (!this.orderIssuedForm.order_detail) return isItemExists
+      var orderDetail = this.orderIssuedForm.order_detail
       for (var i = 0; i < orderDetail.length; i++) {
         if (orderDetail[i].clothe_num === clothe_num && orderDetail[i].color === color) {
           isItemExists = true
         }
       }
       return isItemExists
-    },
-    // 款号和颜色是否有变化
-    reviseClotheOrColor(value) {
-      this.changedColtheNumOrColor = true
-      // console.log(value)
     }
   }
 }
