@@ -466,6 +466,7 @@ export default {
       )
     },
     FormatDate(inputDate) {
+      if (typeof (inputDate) === 'string') return inputDate
       const y = inputDate.getFullYear()
       let m = inputDate.getMonth() + 1
       let d = inputDate.getDate()
