@@ -12,6 +12,9 @@
       <el-form-item label="订单数量:" prop="amount">
         <el-input v-model.number="orderIssuedDetailForm.amount" disabled oninput="value=value.replace(/[^0-9.]/g,'')" placeholder="请输入数量" />
       </el-form-item>
+      <el-form-item label="库存数量:" prop="inventory_num">
+        <el-input v-model.number="orderIssuedDetailForm.inventory_num" disabled oninput="value=value.replace(/[^0-9.]/g,'')" placeholder="请输入数量" />
+      </el-form-item>
       <el-form-item label="发货数量:" prop="issued_num">
         <!-- <el-input v-model.number="orderDetailForm.issued_num" placeholder="请输入发货数量" @input="value=change($event)" /> -->
         <el-input id="issuedNum" v-model.number="orderIssuedDetailForm.issued_num" placeholder="请输入发货数量" @input="value=change($event)" />
@@ -42,6 +45,8 @@ export default {
       }
       if (parseInt(value) > this.orderIssuedDetailForm.amount) {
         callback(new Error('发货数量不能大于订单数量'))
+      } else if (parseInt(value) > this.orderIssuedDetailForm.inventory_num) {
+        callback(new Error('发货数量不能大于库存数量'))
       } else {
         callback()
       }

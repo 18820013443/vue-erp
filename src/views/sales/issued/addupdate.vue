@@ -82,6 +82,12 @@
         label="发货数量"
         width="110px"
       />
+      <el-table-column
+        align="center"
+        prop="inventory_num"
+        label="库存数量"
+        width="110px"
+      />
       <el-table-column align="center" label="操作">
         <template slot-scope="scope">
           <el-row :gutter="10">
