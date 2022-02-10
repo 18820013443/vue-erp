@@ -37,9 +37,9 @@ export default {
     //   console.log(this.orderDetailForm.amount)
       console.log(value)
       value = this.orderIssuedDetailForm.issued_num
-      if (!value) {
-        callback('发货数量不能为空')
-      }
+      // if (!value) {
+      //   callback('发货数量不能为空')
+      // }
       if (!(/^-?\d*\.?\d*$/).test(value)) {
         callback('发货数量必须是整数')
       }

@@ -291,6 +291,7 @@ export default {
           objRes.phone = results[index].phone
           objRes.address = results[index].address
           objRes.issued_all = results[index].issued_all
+          objRes.issued_partial = results[index].issued_partial
           objRes.clothe_num = results[index].order_detail[i].clothe_num
           objRes.color = results[index].order_detail[i].color
           objRes.amount = results[index].order_detail[i].amount
