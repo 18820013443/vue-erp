@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function fetchList(query) {
   return request({
-    url: '/sales/orders',
+    url: '/sales/orders/',
     // baseURL: 'http://39.101.151.118:8080',
     method: 'get',
     params: query
@@ -41,7 +41,7 @@ export function deleteOrder(id) {
 
 export function fetchData(query) {
   return request({
-    url: '/sales/orders/issued',
+    url: '/sales/orders/issued/',
     method: 'get',
     params: query
   })
@@ -71,7 +71,7 @@ export function fetchIssuedOrder(id) {
 
 export function fetchCustomers(query) {
   return request({
-    url: '/sales/customers',
+    url: '/sales/customers/',
     method: 'get',
     params: query
   })
